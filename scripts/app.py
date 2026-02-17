@@ -6,8 +6,8 @@ from scripts.utils import clean_and_merge
 app = FastAPI(title="Sales Data Automation API")
 
 class FileURLs(BaseModel):
-    sales_file_url: str
-    weight_file_url: str
+    sales_file_url: str 
+    weight_file_url: str 
 
 @app.post("/merge-files/")
 async def merge_files(payload: FileURLs):
@@ -31,3 +31,7 @@ async def merge_files(payload: FileURLs):
         "total_rows": len(merged_df),
         "columns": merged_df.columns.tolist()
     }
+
+@app.get("/ping")
+def ping():
+    return {"status": "ok", "version": "json-url"}
