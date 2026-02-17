@@ -1,24 +1,28 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, Form
 import pandas as pd
-import io, datetime
+import io
+import datetime
+import requests
 from scripts.utils import clean_and_merge
-import sys
-import os
 
 app = FastAPI(title="Sales Data Automation API")
 
-
 @app.post("/merge-files/")
 async def merge_files(
-    sales_file: UploadFile = File(...),
-    weight_file: UploadFile = File(...)
+    sales_file_url: str = Form(...),
+    weight_file_url: str = Form(...)
 ):
-    # Read uploaded Excel files
-    sales_contents = await sales_file.read()
-    weight_contents = await weight_file.read()
+    # Download files from provided URLs
+    sales_response = requests.get(sales_file_url)
+    weight_response = requests.get(weight_file_url)
 
-    sales_df = pd.read_excel(io.BytesIO(sales_contents), header=1)
-    weights_df = pd.read_excel(io.BytesIO(weight_contents), header=0)
+    # Raise error if download fails
+    sales_response.raise_for_status()
+    weight_response.raise_for_status()
+
+    # Read Excel files into DataFrames
+    sales_df = pd.read_excel(io.BytesIO(sales_response.content), header=1)
+    weights_df = pd.read_excel(io.BytesIO(weight_response.content), header=0)
 
     # Clean, merge, and calculate
     merged_df = clean_and_merge(sales_df, weights_df)
